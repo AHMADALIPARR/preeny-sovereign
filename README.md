@@ -1,16 +1,46 @@
 # preeny-sovereign
 
-**Sovereign OS substrate** — pure, deterministic, zero-dependency foundation.
+**Sovereign OS** — pure, deterministic, freestanding, bootable kernel.
 
-No `dlsym`. No logging side-channels. No environment variables. No non-deterministic time, random, or process creation. No external libraries.
+No libc. No heap. No interrupts beyond halt. No non-deterministic time, random, or process creation.
 
-Three layers:
+## Layers
 
-1. **Pure C stubs** (`src/`) — LD_PRELOAD or linked replacements for `alarm`, `fork`, `ptrace`, `rand`, `sleep`, `getuid`, `time`, etc. Every call is a constant.
-2. **Sovereign Fortran kernels** (`kernels/`) — pure `BIND(C)` numeric substrate (`sovereign_rand`, reductions, vector ops, φ-scale). Caller owns memory. All functions `pure`.
-3. **Sovereign OS** (`os/`) — process 1 (`sovereign-init`) that boots, seals events, and runs on the pure stubs + kernels. Header `sovereign.h` defines the contracts.
+1. **Pure C stubs** (`src/`) — constant replacements for classic LD_PRELOAD hooks.
+2. **Sovereign Fortran kernels** (`kernels/`) — pure `BIND(C)` numeric substrate.
+3. **Userspace init** (`os/`) — process-1 style runner on the pure stubs.
+4. **Bootable kernel** (`kernel/`) — Multiboot2 freestanding kernel that writes to VGA text memory and seals boot.
 
-Derived from the simplest modules of [zardus/preeny](https://github.com/zardus/preeny), reduced to pure stubs. Fortran kernels and OS layer are original sovereign code.
+## Bootable kernel
+
+Freestanding x86 Multiboot2 kernel:
+- `kernel/boot.S` — Multiboot2 header + entry
+- `kernel/kernel.c` — VGA text output, pure seal, `hlt` loop
+- `kernel/linker.ld` — load at 1 MiB
+
+### Build & boot
+
+```bash
+make kernel
+# or full ISO (requires grub-mkrescue)
+make iso
+
+# QEMU
+qemu-system-i386 -kernel kernel/kernel.elf
+# or
+qemu-system-i386 -cdrom kernel/sovereign.iso
+```
+
+Screen output (deterministic):
+
+```
+[SEAL] sovereign_kernel_boot
+uid=0 euid=0
+sovereign_rand=42 triangular(10)=55 zero=0
+[SEAL] sovereign_kernel_ready
+```
+
+Then pure `hlt`.
 
 ## Pure C stubs
 
@@ -41,36 +71,16 @@ Derived from the simplest modules of [zardus/preeny](https://github.com/zardus/p
 | `sovereign_fill`        | constant fill |
 | `sovereign_scale`       | in-place scale |
 
-## Build
+## Full build
 
 ```bash
-make              # stubs + kernels + sovereign-init
-make stubs
-make kernels
-make os
+make              # stubs + kernels + os + kernel
+make kernel       # freestanding kernel.elf
+make iso          # sovereign.iso (grub-mkrescue)
 ```
 
-Requires `gcc` and `gfortran`.
-
-## Run the sovereign OS
-
-```bash
-make
-LD_PRELOAD=./derand.so:./desleep.so:./dealarm.so:./deuid.so:./detime.so \
-  ./os/sovereign-init
-```
-
-Output is deterministic:
-
-```
-[SEAL] sovereign_os_boot
-uid=0 euid=0
-sovereign_rand=42 triangular(10)=55 zero=0
-[SEAL] sovereign_os_ready
-```
-
-The process then pauses. No sleep, no fork, no time progression.
+Requires `gcc`, `gfortran`, and (for ISO) `grub-mkrescue` / `xorriso`.
 
 ## License
 
-C stubs derived from zardus/preeny (BSD-2-Clause). Fortran kernels and OS layer are original sovereign pure code, provided as-is for deterministic environments.
+C stubs derived from zardus/preeny (BSD-2-Clause). Fortran kernels, userspace init, and freestanding kernel are original sovereign pure code, provided as-is for deterministic environments.
