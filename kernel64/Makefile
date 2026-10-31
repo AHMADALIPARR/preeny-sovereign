@@ -1,7 +1,7 @@
 CC ?= gcc
-AS ?= gcc
+AS = gcc
 LD ?= ld
-CFLAGS ?= -ffreestanding -O2 -Wall -Wextra -nostdlib -nostartfiles -nodefaultlibs -m64 -mcmodel=kernel -mno-red-zone
+CFLAGS ?= -ffreestanding -O2 -Wall -Wextra -nostdlib -nostartfiles -nodefaultlibs -m64 -mcmodel=kernel -mno-red-zone -fno-pic
 ASFLAGS ?= -ffreestanding -m64
 LDFLAGS ?= -T linker.ld -nostdlib -m elf_x86_64
 
