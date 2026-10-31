@@ -6,7 +6,7 @@ FFLAGS ?= -shared -fPIC -O2 -Wall -std=f2008
 C_SRCS = $(wildcard src/*.c)
 C_SOS  = $(patsubst src/%.c,%.so,$(C_SRCS))
 
-all: stubs kernels os kernel
+all: stubs kernels os kernel kernel64
 
 stubs: $(C_SOS)
 
@@ -19,6 +19,9 @@ os: kernels
 kernel:
 	$(MAKE) -C kernel
 
+kernel64:
+	$(MAKE) -C kernel64
+
 iso:
 	$(MAKE) -C kernel iso
 
@@ -30,5 +33,6 @@ clean:
 	$(MAKE) -C kernels clean
 	$(MAKE) -C os clean
 	$(MAKE) -C kernel clean
+	$(MAKE) -C kernel64 clean
 
-.PHONY: all stubs kernels os kernel iso clean
+.PHONY: all stubs kernels os kernel kernel64 iso clean
