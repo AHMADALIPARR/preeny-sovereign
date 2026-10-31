@@ -9,13 +9,13 @@ No libc. No heap. No interrupts beyond halt. No non-deterministic time, random, 
 1. **Pure C stubs** (`src/`) — constant replacements for classic LD_PRELOAD hooks.
 2. **Sovereign Fortran kernels** (`kernels/`) — pure `BIND(C)` numeric substrate.
 3. **Userspace init** (`os/`) — process-1 style runner on the pure stubs.
-4. **Bootable kernel** (`kernel/`) — Multiboot2 freestanding kernel that writes to VGA text memory and seals boot.
+4. **Bootable kernel** (`kernel/`) — Multiboot2 freestanding kernel that writes to VGA text memory, parses the memory map, and seals boot.
 
 ## Bootable kernel
 
 Freestanding x86 Multiboot2 kernel:
-- `kernel/boot.S` — Multiboot2 header + entry
-- `kernel/kernel.c` — VGA text output, pure seal, `hlt` loop
+- `kernel/boot.S` — Multiboot2 header + entry; passes info structure pointer to `kernel_main`
+- `kernel/kernel.c` — VGA text output, Multiboot2 tag walker, memory map (type 6) parser, pure seal, `hlt` loop
 - `kernel/linker.ld` — load at 1 MiB
 
 ### Build & boot
@@ -31,16 +31,7 @@ qemu-system-i386 -kernel kernel/kernel.elf
 qemu-system-i386 -cdrom kernel/sovereign.iso
 ```
 
-Screen output (deterministic):
-
-```
-[SEAL] sovereign_kernel_boot
-uid=0 euid=0
-sovereign_rand=42 triangular(10)=55 zero=0
-[SEAL] sovereign_kernel_ready
-```
-
-Then pure `hlt`.
+Screen output includes the memory map (addresses, lengths, types: available / reserved / acpi_reclaim / …) between the boot and ready seals, then pure `hlt`.
 
 ## Pure C stubs
 
