@@ -1,5 +1,6 @@
 /* sovereign pure stub: time and gettimeofday return fixed zero values */
 #include <time.h>
+#include <sys/time.h>
 
 time_t time(time_t *tloc)
 {
