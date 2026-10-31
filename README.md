@@ -1,10 +1,12 @@
 # preeny-sovereign
 
-Sovereign minimal pure-stub LD_PRELOAD hooks derived from [zardus/preeny](https://github.com/zardus/preeny).
+Sovereign minimal pure-stub LD_PRELOAD hooks and pure Fortran compute kernels.
 
-These are zero-dependency, deterministic replacements for the simplest interception modules. No `dlsym`, no logging, no environment-variable configuration, no glibc-specific workarounds.
+Zero-dependency, fully deterministic. No `dlsym`, no logging, no environment variables, no external libraries, no non-deterministic behavior.
 
-## Pure stubs included
+Derived from the simplest modules of [zardus/preeny](https://github.com/zardus/preeny), reduced to pure stubs. Fortran kernels added as a sovereign numeric substrate.
+
+## Pure C stubs
 
 | Module       | Behavior |
 |--------------|----------|
@@ -18,22 +20,47 @@ These are zero-dependency, deterministic replacements for the simplest intercept
 | `detime.so`  | `time()` / `gettimeofday()` return 0 |
 | `startstop.so`| Process receives SIGSTOP on load |
 
-Complex modules that require `dlsym(RTLD_NEXT, …)` (desock, desock_dup, mallocwatch, etc.) are intentionally omitted. They cannot be reduced to pure stubs without losing their semantics.
+Complex modules requiring `dlsym(RTLD_NEXT, …)` are omitted.
+
+## Sovereign Fortran kernels
+
+Pure, deterministic, `BIND(C)` interfaces in `kernels/`:
+
+| Symbol                  | Meaning |
+|-------------------------|---------|
+| `sovereign_rand`        | Always returns 42 |
+| `sovereign_triangular`  | n(n+1)/2 |
+| `sovereign_identity`    | Identity |
+| `sovereign_zero`        | Zero |
+| `sovereign_square`      | x² |
+| `sovereign_phi_scale`   | x / φ |
+| `sovereign_dot`         | Dot product |
+| `sovereign_sum`         | Sum reduction |
+| `sovereign_fill`        | Constant fill |
+| `sovereign_scale`       | In-place scale |
+
+All functions are `pure`. No allocation inside kernels. Caller owns memory for vector routines.
 
 ## Build
 
 ```bash
-make
+make          # C stubs + Fortran kernels
+make stubs    # C only
+make kernels  # Fortran only
 ```
 
-Produces one `.so` per source file.
+Requires `gcc` and `gfortran`.
 
 ## Usage
 
 ```bash
+# LD_PRELOAD pure stubs
 LD_PRELOAD=./derand.so:./desleep.so:./dealarm.so ./target
+
+# Link or dlopen Fortran kernels (BIND(C) symbols)
+gcc -o demo demo.c kernels/sovereign_math.so -ldl
 ```
 
 ## License
 
-Derived from zardus/preeny (BSD-2-Clause). These minimal stubs are provided as-is for sovereign / deterministic environments.
+C stubs derived from zardus/preeny (BSD-2-Clause). Fortran kernels are original sovereign pure code, provided as-is for deterministic environments.
