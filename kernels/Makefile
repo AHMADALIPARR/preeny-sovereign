@@ -1,4 +1,4 @@
-FC ?= gfortran
+FC = gfortran
 FFLAGS ?= -shared -fPIC -O2 -Wall -std=f2008
 
 all: libsovereign_math.so libsovereign_vector.so
