@@ -15,6 +15,16 @@ header_start:
     .long 8
 header_end:
 
+.section .rodata
+gdt64:
+    .quad 0                         /* null */
+    .quad (1 << 43) | (1 << 44) | (1 << 47) | (1 << 53)  /* code 64-bit */
+gdt64_end:
+
+gdt64_pointer:
+    .word gdt64_end - gdt64 - 1
+    .quad gdt64
+
 .section .text
 .code32
 .global _start
@@ -70,7 +80,8 @@ map_loop:
     or $(1 << 31), %eax
     mov %eax, %cr0
 
-    /* far jump to 64-bit code */
+    /* load GDT and far jump to 64-bit code */
+    lgdt gdt64_pointer
     ljmp $0x08, $long_mode_start
 
 no_long_mode:
