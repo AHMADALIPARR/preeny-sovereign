@@ -20,8 +20,12 @@ header_end:
 .section .text
 .global _start
 _start:
+    /* Multiboot2: EAX = 0x36d76289, EBX = info structure physical address */
+    mov %ebx, %eax          /* pass info pointer as first argument */
     mov $stack_top, %esp
+    push %eax               /* argument for kernel_main */
     call kernel_main
+    add $4, %esp
     cli
 1:  hlt
     jmp 1b
