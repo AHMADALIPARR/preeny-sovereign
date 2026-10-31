@@ -1,5 +1,5 @@
 CC ?= gcc
-AS ?= gcc
+AS = gcc
 LD ?= ld
 CFLAGS ?= -ffreestanding -O2 -Wall -Wextra -nostdlib -nostartfiles -nodefaultlibs -m32
 ASFLAGS ?= -ffreestanding -m32
