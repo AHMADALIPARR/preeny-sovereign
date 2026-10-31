@@ -1,27 +1,27 @@
 CC ?= gcc
-CFLAGS ?= -shared -fPIC -Wall -O2
+CFLAGS_STUBS ?= -shared -fPIC -Wall -O2
 FC ?= gfortran
 FFLAGS ?= -shared -fPIC -O2 -Wall -std=f2008
 
 C_SRCS = $(wildcard src/*.c)
 C_SOS  = $(patsubst src/%.c,%.so,$(C_SRCS))
 
-F_SRCS = $(wildcard kernels/*.f90)
-F_SOS  = $(patsubst kernels/%.f90,kernels/%.so,$(F_SRCS))
-
-all: stubs kernels
+all: stubs kernels os
 
 stubs: $(C_SOS)
 
-kernels: $(F_SOS)
+kernels:
+	$(MAKE) -C kernels
+
+os: kernels
+	$(MAKE) -C os
 
 %.so: src/%.c
-	$(CC) $(CFLAGS) -o $@ $<
-
-kernels/%.so: kernels/%.f90
-	$(FC) $(FFLAGS) -o $@ $<
+	$(CC) $(CFLAGS_STUBS) -o $@ $<
 
 clean:
-	rm -f *.so kernels/*.so kernels/*.mod
+	rm -f *.so
+	$(MAKE) -C kernels clean
+	$(MAKE) -C os clean
 
-.PHONY: all stubs kernels clean
+.PHONY: all stubs kernels os clean
