@@ -1,12 +1,12 @@
 FC ?= gfortran
 FFLAGS ?= -shared -fPIC -O2 -Wall -std=f2008
 
-SRCS = $(wildcard *.f90)
-SOS  = $(patsubst %.f90,%.so,$(SRCS))
+all: libsovereign_math.so libsovereign_vector.so
 
-all: $(SOS)
+libsovereign_math.so: sovereign_math.f90
+	$(FC) $(FFLAGS) -o $@ $<
 
-%.so: %.f90
+libsovereign_vector.so: sovereign_vector.f90
 	$(FC) $(FFLAGS) -o $@ $<
 
 clean:
